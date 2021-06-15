@@ -1,5 +1,6 @@
 package com.niubo.mynote.activities;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ImageView imageAddNoteMain = findViewById(R.id.imageAddNoteMain);
+
         imageAddNoteMain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -69,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     private void getNotes() {
         class GetNotesTask extends AsyncTask<Void, Void, List<Note>> {
 
@@ -79,15 +80,13 @@ public class MainActivity extends AppCompatActivity {
                         .noteDao().getAllNotes();
             }
 
-            /**
-             *
+            /*
              * We checked if the note is empty it means the app is just started since we have
              * declared it as a global variable, in this case, we are adding all notes from the
              * database to this note list and notify the adapter about the new dataset. In another
              * case, if the note list is note empty then it means notes are already loaded from
              * the database so we are just adding only the latest note to the note list and notify
              * adapter about new note inserted. And last we scrolled our recycler view to the top.
-             *
              */
 
             @Override
@@ -106,7 +105,21 @@ public class MainActivity extends AppCompatActivity {
                 notesRecyclerView.smoothScrollToPosition(0);
             }
         }
-
         new GetNotesTask().execute();
+    }
+
+    /**
+     * Since we have started "CreateNoteActivity" for the result, we need to
+     * handle the result in "onActivityResult" method to update the note list
+     * after adding a note from "CreateNoteActivity"
+     *
+     * */
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_ADD_NOTE && resultCode == RESULT_OK) {
+            getNotes();
+        }
     }
 }
