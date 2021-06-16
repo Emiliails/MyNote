@@ -1,8 +1,11 @@
 package com.niubo.mynote.adapters;
 
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,9 +17,9 @@ import com.niubo.mynote.entities.Note;
 import java.util.List;
 
 //Several different classes work together to build your dynamic list.
-//RecyclerView
+//RecyclerView (see in activity_main.xml)
 //RecyclerView.ViewHolder
-//RecyclerView.Adapter
+//RecyclerView.Adapter(see in MainActivity.java)
 //LayoutManager
 
 /**
@@ -45,8 +48,9 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     @NonNull
     @Override
+
     public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // the constructor of the view holder finds three TextViews from given View.
+        // find the elements of the "card"
         return new NoteViewHolder(
                 LayoutInflater.from(parent.getContext()).inflate(
                         R.layout.item_container_note,
@@ -65,7 +69,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     @Override
     public void onBindViewHolder(@NonNull NotesAdapter.NoteViewHolder holder, int position) {
-        // fill these three textViews with given note object
+        // set the textTitle, textSubtitle, textDateTime, and the color of the "card"
         holder.setNote(notes.get(position));
     }
 
@@ -95,17 +99,22 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     static class NoteViewHolder extends RecyclerView.ViewHolder {
 
         TextView textTitle, textSubtitle, textDateTime;
+        LinearLayout layoutNote;
 
-        // the constructor of the view holder, find three TextViews from given View.
+        // find the elements of the "card"
         NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             textTitle = itemView.findViewById(R.id.textTitle);
             textSubtitle = itemView.findViewById(R.id.textSubtitle);
             textDateTime = itemView.findViewById(R.id.textDateTime);
+            layoutNote = itemView.findViewById(R.id.layoutNote);
+
         }
 
-        // fill these three textViews with given note object
+        // set the textTitle, textSubtitle, textDateTime, and the color of the "card"
         void setNote(Note note) {
+
+            // fill these three textViews with given note object
             textTitle.setText(note.getTitle());
             if (note.getSubtitle().trim().isEmpty()) {
                 textSubtitle.setVisibility(View.GONE);
@@ -113,6 +122,14 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
                 textSubtitle.setText(note.getSubtitle());
             }
             textDateTime.setText(note.getDateTime());
+
+            // set the color of background of the layout to the color of the note
+            GradientDrawable gradientDrawable = (GradientDrawable) layoutNote.getBackground();
+            if (note.getColor() != null) {
+                gradientDrawable.setColor(Color.parseColor(note.getColor()));
+            } else {
+                gradientDrawable.setColor(Color.parseColor("#333333"));
+            }
         }
 
     }

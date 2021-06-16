@@ -4,14 +4,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.niubo.mynote.R;
 import com.niubo.mynote.database.NotesDatabase;
 import com.niubo.mynote.entities.Note;
@@ -24,6 +28,10 @@ public class CreateNoteActivity extends AppCompatActivity {
 
     private EditText inputNoteTitle, inputNoteSubtitle, inputNoteText;
     private TextView textDateTime;
+    private View viewSubtitleIndicator;
+
+    private String selectedNoteColor;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +51,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         inputNoteSubtitle = findViewById(R.id.inputNoteSubtitle);
         inputNoteText = findViewById(R.id.inputNote);
         textDateTime = findViewById(R.id.textDateTime);
+        viewSubtitleIndicator = findViewById(R.id.viewSubtitleIndicator);
 
         // set the text of the TextView current date&time in given format
         textDateTime.setText(
@@ -60,6 +69,14 @@ public class CreateNoteActivity extends AppCompatActivity {
                 saveNote();
             }
         });
+
+        // default note color
+        selectedNoteColor = "#333333";
+
+        initMiscellaneous();
+
+        // set selectedNoteColor as subtitle indicator color
+        setSubtitleIndicatorColor();
     }
 
     /**
@@ -91,10 +108,10 @@ public class CreateNoteActivity extends AppCompatActivity {
         note.setSubtitle(inputNoteSubtitle.getText().toString());
         note.setNoteText(inputNoteText.getText().toString());
         note.setDateTime(textDateTime.getText().toString());
+        note.setColor(selectedNoteColor);
 
         //Room doesn't allow database operation on the main thread.
         //Using async task to save notes
-
         @SuppressLint("StaticFieldLeak")
         class SaveNoteTask extends AsyncTask<Void, Void, Void> {
             @Override
@@ -113,6 +130,122 @@ public class CreateNoteActivity extends AppCompatActivity {
         }
 
         new SaveNoteTask().execute();
+    }
+
+    /**
+     * expand or collapse the color selector bottom sheet while clicking or swiping.
+     * update the done icon while picking colors.
+     * keeping the color of the subtitle indicator update to the color you pick.
+     */
+
+
+    private void initMiscellaneous() {
+
+        // expand or collapse the color selector bottom sheet while clicking or swiping
+        final LinearLayout layoutMiscellaneous = findViewById(R.id.layoutMiscellaneous);
+        final BottomSheetBehavior<LinearLayout> bottomSheetBehavior = BottomSheetBehavior.from(layoutMiscellaneous);
+        layoutMiscellaneous.findViewById(R.id.textMiscellaneous).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                } else {
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                }
+            }
+        });
+
+        // update
+        final ImageView imageColor1 = layoutMiscellaneous.findViewById(R.id.imageColor1);
+        final ImageView imageColor2 = layoutMiscellaneous.findViewById(R.id.imageColor2);
+        final ImageView imageColor3 = layoutMiscellaneous.findViewById(R.id.imageColor3);
+        final ImageView imageColor4 = layoutMiscellaneous.findViewById(R.id.imageColor4);
+        final ImageView imageColor5 = layoutMiscellaneous.findViewById(R.id.imageColor5);
+
+        layoutMiscellaneous.findViewById(R.id.viewColor1).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // update the selectedNoteColor
+                selectedNoteColor = "#333333";
+                // update the done icon
+                imageColor1.setImageResource(R.drawable.ic_done);
+                imageColor2.setImageResource(0);
+                imageColor3.setImageResource(0);
+                imageColor4.setImageResource(0);
+                imageColor5.setImageResource(0);
+                // update the subtitleIndicatorColor
+                setSubtitleIndicatorColor();
+            }
+        });
+
+        layoutMiscellaneous.findViewById(R.id.viewColor2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // update the selectedNoteColor
+                selectedNoteColor = "#FDBE3B";
+                // update the done icon
+                imageColor1.setImageResource(0);
+                imageColor2.setImageResource(R.drawable.ic_done);
+                imageColor3.setImageResource(0);
+                imageColor4.setImageResource(0);
+                imageColor5.setImageResource(0);
+                // update the subtitleIndicatorColor
+                setSubtitleIndicatorColor();
+            }
+        });
+
+        layoutMiscellaneous.findViewById(R.id.viewColor3).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // update the selectedNoteColor
+                selectedNoteColor = "#FF4842";
+                // update the done icon
+                imageColor1.setImageResource(0);
+                imageColor2.setImageResource(0);
+                imageColor3.setImageResource(R.drawable.ic_done);
+                imageColor4.setImageResource(0);
+                imageColor5.setImageResource(0);
+                // update the subtitleIndicatorColor
+                setSubtitleIndicatorColor();
+            }
+        });
+
+        layoutMiscellaneous.findViewById(R.id.viewColor4).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // update the selectedNoteColor
+                selectedNoteColor = "#3A52FC";
+                // update the done icon
+                imageColor1.setImageResource(0);
+                imageColor2.setImageResource(0);
+                imageColor3.setImageResource(0);
+                imageColor4.setImageResource(R.drawable.ic_done);
+                imageColor5.setImageResource(0);
+                // update the subtitleIndicatorColor
+                setSubtitleIndicatorColor();
+            }
+        });
+
+        layoutMiscellaneous.findViewById(R.id.viewColor5).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // update the selectedNoteColor
+                selectedNoteColor = "#000000";
+                // update the done icon
+                imageColor1.setImageResource(0);
+                imageColor2.setImageResource(0);
+                imageColor3.setImageResource(0);
+                imageColor4.setImageResource(0);
+                imageColor5.setImageResource(R.drawable.ic_done);
+                // update the subtitleIndicatorColor
+                setSubtitleIndicatorColor();
+            }
+        });
+    }
+
+    private void setSubtitleIndicatorColor() {
+        GradientDrawable gradientDrawable = (GradientDrawable) viewSubtitleIndicator.getBackground();
+        gradientDrawable.setColor(Color.parseColor(selectedNoteColor));
     }
 
 

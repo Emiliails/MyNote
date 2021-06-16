@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         notesAdapter = new NotesAdapter(noteList);
         notesRecyclerView.setAdapter(notesAdapter);
 
-        // fetch all notes from database to logcat when this activity launched.
+        // fetch all notes from database when this activity launched.
         getNotes();
 
     }
