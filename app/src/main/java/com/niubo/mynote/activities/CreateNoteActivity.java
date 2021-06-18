@@ -1,13 +1,26 @@
 package com.niubo.mynote.activities;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -15,11 +28,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.niubo.mynote.R;
 import com.niubo.mynote.database.NotesDatabase;
 import com.niubo.mynote.entities.Note;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -29,8 +45,13 @@ public class CreateNoteActivity extends AppCompatActivity {
     private EditText inputNoteTitle, inputNoteSubtitle, inputNoteText;
     private TextView textDateTime;
     private View viewSubtitleIndicator;
+    private ImageView imageNote;
 
     private String selectedNoteColor;
+    private String selectedImagePath;
+
+    public static final int REQUEST_CODE_STORAGE_PERMISSION = 1;
+    public static final int REQUEST_CODE_SELECT_IMAGE = 2;
 
 
     @Override
@@ -52,6 +73,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         inputNoteText = findViewById(R.id.inputNote);
         textDateTime = findViewById(R.id.textDateTime);
         viewSubtitleIndicator = findViewById(R.id.viewSubtitleIndicator);
+        imageNote = findViewById(R.id.imageNote);
 
         // set the text of the TextView current date&time in given format
         textDateTime.setText(
@@ -72,23 +94,15 @@ public class CreateNoteActivity extends AppCompatActivity {
 
         // default note color
         selectedNoteColor = "#333333";
+        // default image path
+        selectedImagePath = "";
+
 
         initMiscellaneous();
 
         // set selectedNoteColor as subtitle indicator color
         setSubtitleIndicatorColor();
     }
-
-    /**
-     * When a variable is declared with final keyword, its value can’t be modified,
-     * essentially, a constant. This also means that you must initialize a final variable.
-     * If the final variable is a reference,
-     * this means that the variable cannot be re-bound to reference another object,
-     * but internal state of the object pointed by that reference variable can be changed
-     * i.e. you can add or remove elements from final array or final collection.
-     * It is good practice to represent final variables in all uppercase,
-     * using underscore to separate words.
-     */
 
     private void saveNote() {
 
@@ -109,6 +123,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         note.setNoteText(inputNoteText.getText().toString());
         note.setDateTime(textDateTime.getText().toString());
         note.setColor(selectedNoteColor);
+        note.setImagePath(selectedImagePath);
 
         //Room doesn't allow database operation on the main thread.
         //Using async task to save notes
@@ -155,7 +170,8 @@ public class CreateNoteActivity extends AppCompatActivity {
             }
         });
 
-        // update
+        // update the done icon while picking colors.
+        // keeping the color of the subtitle indicator update to the color you pick.
         final ImageView imageColor1 = layoutMiscellaneous.findViewById(R.id.imageColor1);
         final ImageView imageColor2 = layoutMiscellaneous.findViewById(R.id.imageColor2);
         final ImageView imageColor3 = layoutMiscellaneous.findViewById(R.id.imageColor3);
@@ -241,6 +257,19 @@ public class CreateNoteActivity extends AppCompatActivity {
                 setSubtitleIndicatorColor();
             }
         });
+
+        layoutMiscellaneous.findViewById(R.id.layoutAddImage).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                // Requesting runtime storage permission
+                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(CreateNoteActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_STORAGE_PERMISSION);
+                } else {
+                    selectImage();
+                }
+            }
+        });
     }
 
     private void setSubtitleIndicatorColor() {
@@ -248,5 +277,64 @@ public class CreateNoteActivity extends AppCompatActivity {
         gradientDrawable.setColor(Color.parseColor(selectedNoteColor));
     }
 
+    private void selectImage() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(intent, REQUEST_CODE_SELECT_IMAGE);
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_STORAGE_PERMISSION && grantResults.length > 0) {
+            selectImage();
+        } else {
+            Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // handling result for selected image
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_SELECT_IMAGE && resultCode == RESULT_OK) {
+            if (data != null) {
+                Uri selectedImageUri = data.getData();
+                if (selectedImageUri != null) {
+                    try {
+
+//                        InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
+//                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+//                        imageNote.setImageBitmap(bitmap);
+
+                        Glide.with(CreateNoteActivity.this)
+                                .load(selectedImageUri)
+                                .into(imageNote);
+
+
+                        imageNote.setVisibility(View.VISIBLE);
+
+                        selectedImagePath = getPathFromUri(selectedImageUri);
+                    } catch (Exception exception) {
+                        Toast.makeText(this, exception.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+    }
+
+    private String getPathFromUri(Uri contentUri) {
+        String filePath;
+        Cursor cursor = getContentResolver().query(contentUri, null, null, null);
+        if (cursor != null) {
+            filePath = contentUri.getPath();
+        } else {
+            cursor.moveToFirst();
+            int index = cursor.getColumnIndex("_data");
+            filePath = cursor.getString(index);
+            cursor.close();
+        }
+        return filePath;
+    }
 }
