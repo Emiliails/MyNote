@@ -140,10 +140,11 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             if (note.getImagePath() != null) {
                 imageNote.setImageBitmap(BitmapFactory.decodeFile(note.getImagePath()));
                 imageNote.setVisibility(View.VISIBLE);
+                int a = imageNote.getVisibility();
+                System.out.println(a);
             } else {
                 imageNote.setVisibility(View.GONE);
             }
         }
-
     }
 }
